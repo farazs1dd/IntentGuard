@@ -62,7 +62,7 @@ class DeviationDetector:
         side_effects_score, side_reasons = self._calculate_side_effects(tool_name, params)
         sequence_score, seq_reasons = self._calculate_sequence_deviation(tool_name)
 
-        # Track call history
+        # Track after analysis so sequence check sees prior calls only
         self.tool_call_history.append(tool_call)
 
         # Calculate overall score (average of dimensions)
@@ -133,6 +133,24 @@ class DeviationDetector:
         if tool_name in ['freeze_account'] and len(self.contract.resource_scope.transaction_ids) > 0:
             score += 60
             reasons.append("Scope expansion: transaction-level task to account-level action")
+
+        # Check max_transactions_affected constraint
+        if self.contract.constraints.max_transactions_affected is not None:
+            # Count unique transaction IDs affected in history + current call
+            affected_tx_ids = set()
+            for call in self.tool_call_history:
+                call_tx_id = call.get('params', {}).get('tx_id')
+                if call_tx_id:
+                    affected_tx_ids.add(call_tx_id)
+            if tx_id:
+                affected_tx_ids.add(tx_id)
+
+            if len(affected_tx_ids) > self.contract.constraints.max_transactions_affected:
+                score += 50
+                reasons.append(
+                    f"Exceeded max_transactions_affected: {len(affected_tx_ids)} > "
+                    f"{self.contract.constraints.max_transactions_affected}"
+                )
 
         return min(score, 100), reasons
 

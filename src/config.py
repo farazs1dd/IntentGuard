@@ -63,12 +63,19 @@ def load_config(config_file: Optional[str] = None) -> Config:
         )
 
     # Load from environment
+    try:
+        poll_interval = int(os.getenv('INTENTGUARD_POLL_INTERVAL', '10'))
+    except ValueError as e:
+        raise ValueError(
+            f"INTENTGUARD_POLL_INTERVAL must be a valid integer: {e}"
+        )
+
     return Config(
         gateway_endpoint=os.getenv('GATEWAY_ENDPOINT', ''),
         gateway_service_account=os.getenv('GATEWAY_SERVICE_ACCOUNT', ''),
         gateway_password=os.getenv('GATEWAY_PASSWORD', ''),
         tsg_id=os.getenv('TSG_ID', ''),
         slugname=os.getenv('GATEWAY_SLUGNAME', ''),
-        poll_interval=int(os.getenv('INTENTGUARD_POLL_INTERVAL', '10')),
+        poll_interval=poll_interval,
         report_dir=os.getenv('INTENTGUARD_REPORT_DIR', './reports')
     )

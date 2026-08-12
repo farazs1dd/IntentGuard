@@ -34,7 +34,7 @@ USER → Fraud Chatbot → AI Gateway → Tools
 
 ### Prerequisites
 
-- Python 3.10+
+- **Python 3.10 or higher** (required for Pydantic 2.x compatibility)
 - AI Gateway (Portkey) credentials
 - 2GB RAM minimum
 
@@ -162,7 +162,7 @@ Shows agent expanding beyond authorized resource scope.
 ### Run Tests
 
 ```bash
-pytest tests/ -v
+PYTHONPATH=. pytest tests/ -v
 ```
 
 ### Project Structure
