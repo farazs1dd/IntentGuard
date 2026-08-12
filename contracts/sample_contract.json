@@ -1,0 +1,24 @@
+{
+  "contract_id": "sample_contract_001",
+  "goal": "Hold fraudulent transaction 84721 for review",
+  "authorized_tools": [
+    "read_transaction",
+    "hold_transaction"
+  ],
+  "resource_scope": {
+    "transaction_ids": ["84721"],
+    "account_ids": [],
+    "allowed_scope_expansion": false
+  },
+  "constraints": {
+    "max_transactions_affected": 1,
+    "customer_communication": false,
+    "account_level_actions": false
+  },
+  "approved_recipients": [],
+  "metadata": {
+    "user": "ops@example.com",
+    "timestamp": "2026-08-12T10:00:00Z",
+    "risk_level": "medium"
+  }
+}
