@@ -1,0 +1,13 @@
+{
+  "gateway": {
+    "endpoint": "https://api.portkey.ai/v1",
+    "service_account": "Portkey@1964187962.iam.panserviceaccount.com",
+    "password": "c256711f-ad46-418c-8638-aef240dc7dab",
+    "tsg_id": "1964187962",
+    "slugname": "dp-benchmark-aigateway-553f8f"
+  },
+  "intentguard": {
+    "poll_interval_seconds": 10,
+    "report_directory": "./reports"
+  }
+}
