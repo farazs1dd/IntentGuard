@@ -1,11 +1,12 @@
 """
-AI Gateway client for fetching tool call traces.
+Activity log reader for fetching tool call traces.
 
-Polls Portkey/AI Gateway logs API to retrieve agent tool calls.
+Reads activity log written by fraud agent to retrieve tool calls and AIRS results.
 """
 import logging
+import json
 from typing import List, Dict, Any, Optional
-import requests
+from pathlib import Path
 from src.config import Config
 
 logger = logging.getLogger(__name__)
@@ -13,81 +14,87 @@ logger = logging.getLogger(__name__)
 
 class GatewayClient:
     """
-    Client for fetching tool call traces from AI Gateway.
+    Client for reading tool call activity from local activity log.
 
-    Handles authentication, API requests, and response parsing.
+    Reads activity.jsonl file written by fraud agent containing tool calls
+    and AIRS scan results from AI Gateway responses.
     """
 
     def __init__(self, config: Config, session_id: str, agent_id: str):
         """
-        Initialize gateway client.
+        Initialize activity log reader.
 
         Args:
-            config: Configuration with gateway credentials
+            config: Configuration (not used for file-based monitoring)
             session_id: Session ID to monitor
             agent_id: Agent ID to filter by
         """
         self.config = config
         self.session_id = session_id
         self.agent_id = agent_id
-        self.base_url = config.gateway_endpoint.rstrip('/')
+        self.activity_log_path = Path("activity.jsonl")
+        self.last_read_position = 0
 
-    def fetch_tool_calls(self, since: Optional[str] = None) -> List[Dict[str, Any]]:
+    def fetch_tool_calls(self, since: Optional[float] = None) -> List[Dict[str, Any]]:
         """
-        Fetch tool calls from AI Gateway.
+        Fetch tool calls from activity log.
 
         Args:
-            since: Optional timestamp to fetch calls after (ISO format)
+            since: Optional timestamp to fetch calls after
 
         Returns:
-            List of tool call dicts with 'name', 'params', 'timestamp', 'result'
+            List of tool call dicts with 'name', 'params', 'timestamp', 'airs_result'
         """
-        url = f"{self.base_url}/traces"
+        if not self.activity_log_path.exists():
+            logger.debug(f"Activity log not found: {self.activity_log_path}")
+            return []
 
-        params = {
-            'session_id': self.session_id,
-            'agent_id': self.agent_id
-        }
-
-        if since:
-            params['since'] = since
-
-        headers = {
-            'Authorization': f'Bearer {self.config.gateway_password}',
-            'X-Portkey-Account': self.config.gateway_service_account,
-            'X-TSG-ID': self.config.tsg_id,
-            'X-Slugname': self.config.slugname
-        }
+        tool_calls = []
 
         try:
-            logger.debug(f"Fetching tool calls from {url} for session {self.session_id}")
-            response = requests.get(url, params=params, headers=headers, timeout=30)
+            with open(self.activity_log_path, 'r') as f:
+                # Seek to last read position
+                f.seek(self.last_read_position)
 
-            if response.status_code != 200:
-                logger.warning(f"API returned status {response.status_code}: {response.text}")
-                return []
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
 
-            data = response.json()
-            traces = data.get('traces', [])
+                    try:
+                        activity = json.loads(line)
 
-            # Extract tool calls from traces
-            tool_calls = []
-            for trace in traces:
-                for tool_call in trace.get('tool_calls', []):
-                    tool_calls.append({
-                        'name': tool_call.get('name'),
-                        'params': tool_call.get('parameters', {}),
-                        'timestamp': tool_call.get('timestamp'),
-                        'result': tool_call.get('result'),
-                        'execution_status': tool_call.get('execution_status')
-                    })
+                        # Filter by session and agent
+                        if activity.get('session_id') != self.session_id:
+                            continue
+                        if activity.get('agent_id') != self.agent_id:
+                            continue
 
-            logger.info(f"Fetched {len(tool_calls)} tool calls")
+                        # Filter by timestamp if provided
+                        if since and activity.get('timestamp', 0) <= since:
+                            continue
+
+                        # Extract tool call data
+                        tool_call_data = activity.get('tool_call', {})
+                        tool_calls.append({
+                            'name': tool_call_data.get('name'),
+                            'params': tool_call_data.get('arguments', {}),
+                            'timestamp': activity.get('timestamp'),
+                            'airs_result': activity.get('airs_result', {}),
+                            'session_id': activity.get('session_id'),
+                            'agent_id': activity.get('agent_id')
+                        })
+
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Invalid JSON in activity log: {e}")
+                        continue
+
+                # Update last read position
+                self.last_read_position = f.tell()
+
+            logger.info(f"Fetched {len(tool_calls)} new tool calls from activity log")
             return tool_calls
 
-        except requests.RequestException as e:
-            logger.error(f"Error fetching tool calls: {e}")
-            return []
-        except (ValueError, KeyError) as e:
-            logger.error(f"Error parsing API response: {e}")
+        except IOError as e:
+            logger.error(f"Error reading activity log: {e}")
             return []

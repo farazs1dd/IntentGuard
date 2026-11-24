@@ -27,6 +27,7 @@ ENV/
 
 # Config and secrets
 config/gateway_config.json
+config/gateway_assurance.json
 .env
 
 # Reports (generated at runtime)
@@ -37,3 +38,93 @@ reports/*.json
 .idea/
 *.swp
 *.swo
+
+# Local MVP state and isolated environment
+.venv*/
+data/
+*.sqlite*
+*.jsonl
+logs/
+.env.*
+!.env.example
+
+# Log files
+*.log
+server.log
+composition_server.log
+agent_assurance.log
+
+# Temporary/test files in root
+test_*.py
+test_*.html
+test_*.sh
+behavioral_probes.json
+
+# Documentation files (keep only README.md)
+*_SUMMARY.md
+*_NOTES.md
+*_STATUS.txt
+*_FLOW.txt
+COMPOSITIONGUARD_DESIGN.md
+COMPOSITION_GUARD_SUMMARY.md
+DEMO.md
+DEMO_README.md
+DEMO_RUNTIME.md
+DEMO_STEPS.md
+DEPLOYED.md
+DEPLOYMENT_NOTES.md
+DEPLOY_AWS.md
+END_TO_END_DEMO.md
+FARGATE_DEBUG_SUMMARY.md
+HOW_TO_TEST.md
+IMPLEMENTATION_SUMMARY.md
+INTERACTIVE_DEMO_GUIDE.md
+INTERACTIVE_UI_DESIGN.md
+MARKET_ANALYSIS.md
+PRODUCTION_READY.md
+PRODUCTION_SUMMARY.md
+PRODUCT_ALIGNMENT.md
+PRODUCT_DESCRIPTION_UPDATED.md
+PRODUCT_DOCUMENTATION.md
+QUICKSTART.md
+QUICKSTART_AWS.md
+QUICK_DEMO_GUIDE.md
+QUICK_START.md
+REFACTORING_SUMMARY.md
+RUN_DEMO.md
+RUN_UI.md
+SOURCES.md
+STRATEGIC_POSITIONING.md
+TESTING_GUIDE.md
+UI_MOCKUP_DESIGN.md
+UPDATES_SUMMARY.md
+UPDATE_NOTES.md
+VALIDATION_APPROACH.md
+
+# Legacy/old demo files
+legacy_*.py
+legacy_*.html
+*_autonomous.py
+demo_runtime_interception.py
+simulate_agent.py
+run_autonomous_demo.py
+interactive_dashboard*.html
+composition_dashboard.html
+production_dashboard.html
+dashboard.html
+composition_server.py
+interactive_server.py
+production_server.py
+
+# Deployment scripts
+deploy_*.sh
+create_permanent_service.sh
+run_demo.sh
+
+# Extra requirements files
+requirements_browser.txt
+requirements_interactive.txt
+requirements_mvp.txt
+
+# Static files
+static/

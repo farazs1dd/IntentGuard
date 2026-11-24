@@ -82,6 +82,6 @@ def test_report_airs_gap_analysis():
             report = json.load(f)
 
         gap = report['airs_gap_analysis']
-        assert gap['current_airs_verdict'] == 'ALLOW'
+        assert gap['current_airs_verdict'] == 'UNKNOWN'
         assert gap['intentguard_verdict'] in ['BLOCK', 'REQUIRE_CONFIRMATION']
         assert 'gap_summary' in gap

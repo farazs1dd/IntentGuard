@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntentGuard Security Benchmark</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #374151;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            padding: 32px 40px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Prompt Section */
+        .prompt-section {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 28px 32px;
+            margin-bottom: 32px;
+        }
+
+        .prompt-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 18px;
+            font-style: italic;
+            resize: none;
+            min-height: 80px;
+            transition: all 0.2s;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: var(--bg-secondary);
+        }
+
+        .prompt-examples {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .prompt-example {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-example:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Controls */
+        .controls {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 20px 32px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+
+        select:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .status-indicator {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 28px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-primary);
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-value.success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-value.danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Progress */
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Test Results */
+        .test-results {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 32px;
+            border-radius: 12px;
+        }
+
+        .test-header {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .test-item {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .test-item.running {
+            border-color: var(--accent-primary);
+            animation: pulse-border 2s infinite;
+        }
+
+        .test-item.detected {
+            border-color: var(--success);
+            background: linear-gradient(90deg, var(--bg-tertiary) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--accent-primary); }
+            50% { border-color: var(--accent-secondary); }
+        }
+
+        .test-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .test-id {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Monaco', monospace;
+        }
+
+        .test-badges {
+            display: flex;
+            gap: 10px;
+        }
+
+        .test-badge {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-detected {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-running {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .deviation-score {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: 'Monaco', monospace;
+        }
+
+        .deviation-score.high {
+            background: var(--danger);
+            color: white;
+        }
+
+        .test-intent {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-style: italic;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .test-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+
+        .test-details strong {
+            color: var(--text-primary);
+        }
+
+        /* Contract */
+        .contract-details {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border-left: 4px solid var(--accent-primary);
+            border-radius: 8px;
+        }
+
+        .contract-header {
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+
+        .tool-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .tool-tag {
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Monaco', monospace;
+        }
+
+        /* Attack Sequence */
+        .attack-sequence {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .sequence-header {
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .sequence-step {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+        }
+
+        .sequence-step.allowed {
+            border-left-color: var(--success);
+        }
+
+        .sequence-step.blocked {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            font-weight: 600;
+        }
+
+        .step-icon {
+            font-size: 18px;
+        }
+
+        .step-blocked {
+            margin-left: auto;
+            padding: 3px 8px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Violation */
+        .violation-box {
+            margin-top: 16px;
+            padding: 16px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger);
+            border-radius: 8px;
+        }
+
+        .violation-header {
+            font-weight: 700;
+            color: var(--danger);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .violation-reason {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ IntentGuard Security Benchmark</h1>
+            <p class="subtitle">Behavioral AI Agent Security Testing - Enter Your Scenario</p>
+        </header>
+
+        <div class="prompt-section">
+            <div class="prompt-label">
+                💬 User Prompt / Intent
+            </div>
+            <textarea id="userPrompt" class="prompt-input" placeholder="Enter the user's request or instruction to the AI agent...">Investigate transaction #84721 and hold if fraudulent</textarea>
+
+            <div class="prompt-examples">
+                <span style="font-size: 12px; color: var(--text-secondary); margin-right: 10px;">Quick examples:</span>
+                <button class="prompt-example" onclick="setPrompt('Investigate transaction #84721 and hold if fraudulent')">🏦 Banking Investigation</button>
+                <button class="prompt-example" onclick="setPrompt('Process order #ORD-4472 and ship to customer')">🛍️ Retail Fulfillment</button>
+                <button class="prompt-example" onclick="setPrompt('Cancel booking #BK-2847 and refund passenger')">✈️ Airline Cancellation</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <select id="domainSelect">
+                <option value="">All Domains</option>
+                <option value="banking">🏦 Banking</option>
+                <option value="retail">🛍️ Retail</option>
+                <option value="airline">✈️ Airline</option>
+            </select>
+            <button class="btn btn-primary" id="runBtn" onclick="runTests()">
+                ▶️ Run Security Tests
+            </button>
+            <button class="btn btn-secondary" onclick="clearResults()">
+                Clear Results
+            </button>
+            <div class="status-indicator">
+                <span class="status-dot" id="wsStatus"></span>
+                <span id="wsStatusText">Connected</span>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">Total Tests</div>
+                <div class="metric-value" id="totalTests">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Detected</div>
+                <div class="metric-value success" id="detectedCount">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Missed</div>
+                <div class="metric-value danger" id="missedCount">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Detection Rate</div>
+                <div class="metric-value" id="detectionRate">0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Avg Deviation</div>
+                <div class="metric-value" id="avgDeviation">-</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="test-results">
+            <div class="test-header">🛡️ Security Test Results</div>
+            <div id="testList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🚀</div>
+                    <p>Enter a prompt above and click "Run Security Tests" to start</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let testResults = [];
+        let totalTests = 0;
+        let completedTests = 0;
+
+        function setPrompt(text) {
+            document.getElementById('userPrompt').value = text;
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = () => {
+                document.getElementById('wsStatus').style.background = 'var(--success)';
+                document.getElementById('wsStatusText').textContent = 'Connected';
+            };
+
+            ws.onclose = () => {
+                document.getElementById('wsStatus').style.background = 'var(--danger)';
+                document.getElementById('wsStatusText').textContent = 'Disconnected';
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+        }
+
+        function handleWebSocketMessage(message) {
+            const { type, data } = message;
+
+            switch (type) {
+                case 'test_suite_started':
+                    totalTests = data.total_tests;
+                    completedTests = 0;
+                    testResults = [];
+                    document.getElementById('testList').innerHTML = '';
+                    updateMetrics();
+                    break;
+
+                case 'test_started':
+                    addTestItem(data);
+                    break;
+
+                case 'test_completed':
+                    updateTestItem(data);
+                    completedTests++;
+                    updateProgress();
+                    updateMetrics();
+                    break;
+
+                case 'test_suite_completed':
+                    document.getElementById('runBtn').disabled = false;
+                    document.getElementById('runBtn').innerHTML = '▶️ Run Security Tests';
+                    break;
+            }
+        }
+
+        function addTestItem(data) {
+            const testList = document.getElementById('testList');
+            const item = document.createElement('div');
+            item.className = 'test-item running';
+            item.id = `test-${data.test_id}`;
+            item.innerHTML = `
+                <div class="test-meta">
+                    <div class="test-id">${data.test_id}</div>
+                    <div class="test-badges">
+                        <span class="test-badge badge-running">RUNNING...</span>
+                    </div>
+                </div>
+                <div class="test-intent">"${data.user_intent}"</div>
+            `;
+            testList.appendChild(item);
+        }
+
+        function updateTestItem(data) {
+            const item = document.getElementById(`test-${data.test_id}`);
+            if (!item) return;
+
+            const result = data.result;
+            item.className = `test-item ${result.detected ? 'detected' : 'missed'}`;
+
+            const badge = result.detected ? 'badge-detected' : 'badge-missed';
+            const badgeText = result.detected ? '✓ DETECTED' : '✗ MISSED';
+
+            let deviationBadge = '';
+            if (result.deviation_score !== null) {
+                const scoreClass = result.deviation_score >= 70 ? 'high' : 'medium';
+                deviationBadge = `<span class="deviation-score ${scoreClass}">${result.deviation_score}/100</span>`;
+            }
+
+            const contract = data.intent_contract || {};
+            let contractHtml = '<div class="contract-details">';
+            contractHtml += '<div class="contract-header">📋 Intent Contract</div>';
+
+            if (contract.authorized_tools) {
+                contractHtml += '<div class="tool-list">';
+                contract.authorized_tools.forEach(tool => {
+                    contractHtml += `<span class="tool-tag">${tool}</span>`;
+                });
+                contractHtml += '</div>';
+            }
+            contractHtml += '</div>';
+
+            let attackSeq = '<div class="attack-sequence">';
+            attackSeq += '<div class="sequence-header">🔍 Attack Sequence</div>';
+            data.attack_sequence.forEach((step, idx) => {
+                const isBlocked = result.blocked_at_stage && idx + 1 === result.blocked_at_stage;
+                const stepClass = isBlocked ? 'blocked' : 'allowed';
+                const icon = isBlocked ? '🚫' : '✅';
+
+                attackSeq += `<div class="sequence-step ${stepClass}">
+                    <span class="step-icon">${icon}</span>
+                    <span>${step.step}. ${step.tool}()</span>
+                    ${isBlocked ? '<span class="step-blocked">BLOCKED</span>' : ''}
+                </div>`;
+            });
+            attackSeq += '</div>';
+
+            let violationHtml = '';
+            if (result.detected && result.block_reason) {
+                violationHtml = `
+                    <div class="violation-box">
+                        <div class="violation-header">🚫 Why This Was Blocked</div>
+                        <div class="violation-reason">${result.block_reason}</div>
+                    </div>
+                `;
+            }
+
+            item.innerHTML = `
+                <div class="test-meta">
+                    <div class="test-id">${data.test_id}</div>
+                    <div class="test-badges">
+                        <span class="test-badge ${badge}">${badgeText}</span>
+                        ${deviationBadge}
+                    </div>
+                </div>
+                <div class="test-intent">"${data.user_intent}"</div>
+                <div class="test-details">
+                    <strong>Attack:</strong> ${data.attack_description}<br>
+                    <strong>Impact:</strong> ${data.business_impact}
+                </div>
+                ${contractHtml}
+                ${attackSeq}
+                ${violationHtml}
+            `;
+
+            testResults.push(result);
+        }
+
+        function updateProgress() {
+            if (totalTests === 0) return;
+            const percent = (completedTests / totalTests) * 100;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+        }
+
+        function updateMetrics() {
+            const detected = testResults.filter(r => r.detected).length;
+            const missed = testResults.length - detected;
+            const detectionRate = testResults.length > 0 ? (detected / testResults.length * 100).toFixed(1) : 0;
+            const deviationScores = testResults.map(r => r.deviation_score).filter(s => s !== null);
+            const avgDeviation = deviationScores.length > 0
+                ? (deviationScores.reduce((a, b) => a + b, 0) / deviationScores.length).toFixed(1)
+                : '-';
+
+            document.getElementById('totalTests').textContent = totalTests || testResults.length;
+            document.getElementById('detectedCount').textContent = detected;
+            document.getElementById('missedCount').textContent = missed;
+            document.getElementById('detectionRate').textContent = `${detectionRate}%`;
+            document.getElementById('avgDeviation').textContent = avgDeviation !== '-' ? `${avgDeviation}/100` : '-';
+        }
+
+        async function runTests() {
+            const userPrompt = document.getElementById('userPrompt').value;
+            const domain = document.getElementById('domainSelect').value;
+            const runBtn = document.getElementById('runBtn');
+
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<span class="loading"></span> Running...';
+
+            try {
+                await fetch('/api/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        domain: domain || null,
+                        verbose: true,
+                        user_prompt: userPrompt
+                    })
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                runBtn.disabled = false;
+                runBtn.innerHTML = '▶️ Run Security Tests';
+            }
+        }
+
+        function clearResults() {
+            testResults = [];
+            totalTests = 0;
+            completedTests = 0;
+            document.getElementById('testList').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🚀</div>
+                    <p>Enter a prompt above and click "Run Security Tests" to start</p>
+                </div>
+            `;
+            document.getElementById('progressBar').style.width = '0%';
+            updateMetrics();
+        }
+
+        connectWebSocket();
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send('ping');
+        }, 30000);
+    </script>
+</body>
+</html>

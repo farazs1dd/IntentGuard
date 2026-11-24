@@ -70,7 +70,7 @@ def test_end_to_end_deviation_detection():
         assert report['summary']['total_actions'] == 3
         assert report['summary']['deviations'] >= 1
         assert 'airs_gap_analysis' in report
-        assert report['airs_gap_analysis']['current_airs_verdict'] == 'ALLOW'
+        assert report['airs_gap_analysis']['current_airs_verdict'] == 'UNKNOWN'
         assert report['airs_gap_analysis']['intentguard_verdict'] in ['BLOCK', 'REQUIRE_CONFIRMATION']
 
 

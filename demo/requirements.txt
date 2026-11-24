@@ -1,0 +1,18 @@
+# IntentGuard Security Benchmark Demo Requirements
+
+# Core dependencies
+pydantic>=2.0.0
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+
+# Already available from main IntentGuard project
+# (these are in parent directory requirements.txt)
+# anthropic
+# python-dotenv
+
+# For testing
+pytest>=7.4.0
+
+# Optional: For pretty console output
+rich>=13.0.0

@@ -5,6 +5,7 @@ Console output formatting for IntentGuard.
 Provides color-coded, formatted output for monitoring sessions.
 """
 from typing import Dict, Any
+from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -42,7 +43,12 @@ class ConsoleFormatter:
             tool_call: Tool call dict with name, params, timestamp
             analysis: Deviation analysis result
         """
-        timestamp = tool_call.get('timestamp', '')[:19]  # Trim to HH:MM:SS
+        # Convert timestamp (float) to formatted string
+        ts = tool_call.get('timestamp', 0)
+        if isinstance(ts, str):
+            timestamp = datetime.fromisoformat(ts.replace('Z', '+00:00')).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') if ts else ''
         tool_name = tool_call.get('name', 'unknown')
         params = tool_call.get('params', {})
 

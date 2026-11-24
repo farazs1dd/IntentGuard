@@ -1,0 +1,24 @@
+{
+  "endpoint": "https://api.portkey.ai/v1",
+  "allow_insecure_http": false,
+  "credential_env": "GATEWAY_PASSWORD",
+  "credential_file": null,
+  "auth_header": "x-portkey-api-key",
+  "analyst_route": "approved",
+  "target_route": "approved",
+  "judge_route": "approved",
+  "routes": {
+    "approved": {
+      "model": "REPLACE_WITH_GATEWAY_MODEL",
+      "expected_models": ["REPLACE_WITH_ACTUAL_RESPONSE_MODEL_ID"],
+      "config_id": "REPLACE_WITH_SYNCHRONOUS_AIRS_CONFIG_ID",
+      "provider": null,
+      "input_usd_per_million": null,
+      "output_usd_per_million": null
+    }
+  },
+  "input_scope_verified": false,
+  "synchronous_guardrails_verified": false,
+  "response_cache_disabled_verified": false,
+  "upstream_attempts": 1
+}
